@@ -2,6 +2,13 @@
 
 Este proyecto es una herramienta para descargar videos de YouTube.
 
+<div align="center">
+
+![image](https://github.com/user-attachments/assets/149453d3-ab53-44a4-b536-47fc0cfe53df)
+
+
+</div>
+
 ## Características
 
 - Descarga videos en varios formatos.
