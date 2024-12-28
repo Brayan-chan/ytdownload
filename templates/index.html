@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Descargador de videos de YouTube</title>
+</head>
+<body>
+    <h1>Descargador de videos de YouTube</h1>
+    <form id="formulario" method="post" action="/descargar">
+        <label for="url">URL del video:</label>
+        <input type="text" id="url" name="url" required>
+        <button type="submit">Descargar</button>
+    </form>
+    <div id="resultado"></div>
+
+    <script>
+        const formulario = document.getElementById('formulario');
+        const resultado = document.getElementById('resultado');
+
+        formulario.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const url = document.getElementById('url').value;
+            fetch('/descargar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `url=${url}`
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                resultado.innerText = data.resultado;
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+        });
+    </script>
+</body>
+</html>
