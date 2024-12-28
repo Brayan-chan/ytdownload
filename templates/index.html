@@ -2,23 +2,35 @@
 <html>
 <head>
     <title>Descargador de videos de YouTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Descargador de videos de YouTube</h1>
-    <form id="formulario" method="post" action="/descargar">
-        <label for="url">URL del video:</label>
-        <input type="text" id="url" name="url" required>
-        <button type="submit">Descargar</button>
-    </form>
-    <div id="resultado"></div>
+<body class="bg-gray-100 text-gray-900">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">Descargador de videos de YouTube</h1>
+        <form action="/descargar" method="post" class="mb-4">
+            <label for="url" class="block text-lg mb-2">Ingrese la URL del video:</label>
+            <input type="text" id="url" name="url" class="border border-gray-300 p-2 w-full mb-4">
+            <input type="submit" value="Descargar" class="bg-blue-500 text-white p-2 rounded">
+        </form>
+        <h2 class="text-2xl font-semibold mb-4">Videos descargados:</h2>
+        <ul class="space-y-4">
+            {% for video in videos_descargados %}
+                <li class="bg-white p-4 rounded shadow">
+                    <video width="320" height="240" controls class="border border-gray-300 rounded-lg shadow-lg w-full h-64 object-cover">
+                        <source src="/offline/{{ video }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </li>
+            {% endfor %}
+        </ul>
+        <div id="resultado" class="mt-4"></div>
+    </div>
 
     <script>
-        const formulario = document.getElementById('formulario');
-        const resultado = document.getElementById('resultado');
-
+        const formulario = document.querySelector('form');
         formulario.addEventListener('submit', (e) => {
             e.preventDefault();
-            const url = document.getElementById('url').value;
+            const url = document.querySelector('#url').value;
             fetch('/descargar', {
                 method: 'POST',
                 headers: {
@@ -28,10 +40,18 @@
             })
             .then((response) => response.json())
             .then((data) => {
-                resultado.innerText = data.resultado;
+                document.querySelector('#resultado').innerHTML = data.resultado;
+                // Recargar la página para mostrar el video descargado
+                window.location.reload();
             })
-            .catch((error) => {
-                console.error(error);
+            .catch((error) => console.error(error));
+        });
+
+        // Hacer que los videos se reproduzcan en la página
+        const videos = document.querySelectorAll('video');
+        videos.forEach((video) => {
+            video.addEventListener('click', () => {
+                video.play();
             });
         });
     </script>

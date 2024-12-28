@@ -1,14 +1,19 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import yt_dlp
+import os
 
 app = Flask(__name__)
+
+# Crear la carpeta "offline" si no existe
+if not os.path.exists('offline'):
+    os.makedirs('offline')
 
 # Función para descargar un video de YouTube
 def descargar_video(url):
     # Configuración de la descarga
     ydl_opts = {
         'format': 'best',  # Calidad del video
-        'outtmpl': '%(title)s.%(ext)s',  # Nombre del archivo de salida
+        'outtmpl': 'offline/%(title)s.%(ext)s',  # Nombre del archivo de salida
         'restrictfilenames': True,  # Evitar caracteres especiales en el nombre del archivo
     }
 
@@ -25,7 +30,9 @@ def descargar_video(url):
 # Ruta para la página de inicio
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Obtener la lista de videos descargados
+    videos_descargados = os.listdir('offline')
+    return render_template('index.html', videos_descargados=videos_descargados)
 
 # Ruta para descargar un video
 @app.route('/descargar', methods=['POST'])
@@ -33,6 +40,11 @@ def descargar():
     url = request.form['url']
     resultado = descargar_video(url)
     return jsonify({'resultado': resultado})
+
+# Ruta para servir los videos descargados
+@app.route('/offline/<path:path>')
+def send_video(path):
+    return send_from_directory('offline', path)
 
 if __name__ == '__main__':
     app.run(debug=True)
