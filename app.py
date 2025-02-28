@@ -46,5 +46,12 @@ def descargar():
 def send_video(path):
     return send_from_directory('offline', path)
 
+# Ruta para eliminar videos
+@app.route('/eliminar/<filename>', methods=['GET'])
+def eliminar(filename):
+    os.remove(f'offline/{filename}')
+    return '', 204
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
