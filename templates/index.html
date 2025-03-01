@@ -13,15 +13,25 @@
             <input type="text" id="url" name="url" class="border border-gray-300 p-2 w-full mb-4">
             <input type="submit" value="Descargar" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
         </form>
+        <div id="progress-container" class="hidden">
+            <label for="progress-bar" class="block text-lg mb-2">Progreso de descarga:</label>
+            <div class="w-full bg-gray-200 rounded-full">
+                <div id="progress-bar" class="bg-blue-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: 0%">0%</div>
+            </div>
+        </div>
         <h2 class="text-2xl font-semibold mb-4">Videos descargados:</h2>
         <ul class="space-y-4">
             {% for video in videos_descargados %}
                 <li class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-semibold mb-2">{{ video }}</h3>
                     <video width="320" height="240" controls class="border border-gray-300 rounded-lg shadow-lg w-full h-64 object-cover">
                         <source src="/offline/{{ video }}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
-                    <button class="mt-2 bg-red-500 text-white p-2 rounded hover:bg-red-600 transition duration-300">Eliminar</button>
+                    <div class="mt-2 flex space-x-2">
+                        <button class="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition duration-300">Eliminar</button>
+                        <a href="/offline/{{ video }}" download class="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">Descargar</a>
+                    </div>
                 </li>
             {% endfor %}
         </ul>
@@ -33,6 +43,9 @@
         formulario.addEventListener('submit', (e) => {
             e.preventDefault();
             const url = document.querySelector('#url').value;
+            const progressContainer = document.querySelector('#progress-container');
+            const progressBar = document.querySelector('#progress-bar');
+            progressContainer.classList.remove('hidden');
             fetch('/descargar', {
                 method: 'POST',
                 headers: {
@@ -47,6 +60,16 @@
                 window.location.reload();
             })
             .catch((error) => console.error(error));
+
+            // Actualizar el progreso de descarga
+            const eventSource = new EventSource('/progreso');
+            eventSource.onmessage = function(event) {
+                const progreso = JSON.parse(event.data).progreso;                progressBar.style.width = `${progreso}%`;
+                progressBar.textContent = `${progreso}%`;
+                if (progreso >= 100) {
+                    eventSource.close();
+                }
+            };
         });
 
         // Hacer que los videos se reproduzcan en la página
