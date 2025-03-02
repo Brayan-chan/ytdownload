@@ -13,6 +13,11 @@
             <input type="text" id="url" name="url" class="border border-gray-300 p-2 w-full mb-4">
             <input type="submit" value="Descargar" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
         </form>
+        <form action="/subir" method="post" enctype="multipart/form-data" class="mb-4">
+            <label for="archivo" class="block text-lg mb-2">Seleccione un archivo para subir:</label>
+            <input type="file" id="archivo" name="archivo" class="border border-gray-300 p-2 w-full mb-4">
+            <input type="submit" value="Subir" class="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
+        </form>
         <div id="progress-container" class="hidden">
             <label for="progress-bar" class="block text-lg mb-2">Progreso de descarga:</label>
             <div class="w-full bg-gray-200 rounded-full">
@@ -32,6 +37,23 @@
                         <button class="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition duration-300">Eliminar</button>
                         <a href="/offline/{{ video }}" download class="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">Descargar</a>
                     </div>
+                </li>
+            {% endfor %}
+        </ul>
+        <h2 class="text-2xl font-semibold mb-4">Archivos descargados:</h2>
+        <ul class="space-y-4">
+            {% for archivo in archivos_descargados %}
+                <li class="bg-white p-4 rounded shadow">
+                    <h3 class="text-lg font-semibold mb-2">{{ archivo }}</h3>
+                    {% if archivo.endswith('.mp4') %}
+                        <video width="320" height="240" controls class="border border-gray-300 rounded-lg shadow-lg w-full h-64 object-cover">
+                            <source src="/offline/{{ archivo }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% elif archivo.endswith('.jpg') or archivo.endswith('.jpeg') or archivo.endswith('.png') %}
+                        <img src="/offline/{{ archivo }}" alt="{{ archivo }}" class="border border-gray-300 rounded-lg shadow-lg w-full h-64 object-cover">
+                    {% endif %}
+                    <a href="/offline/{{ archivo }}" download class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300 mt-2 inline-block">Descargar</a>
                 </li>
             {% endfor %}
         </ul>
