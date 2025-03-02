@@ -1,125 +1,356 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Descargador de videos de YouTube</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador de Videos de YouTube</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
-<body class="bg-gray-100 text-gray-900">
-    <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4">Descargador de videos de YouTube</h1>
-        <form action="/descargar" method="post" class="mb-4">
-            <label for="url" class="block text-lg mb-2">Ingrese la URL del video:</label>
-            <input type="text" id="url" name="url" class="border border-gray-300 p-2 w-full mb-4">
-            <input type="submit" value="Descargar" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300">
-        </form>
-        <form action="/subir" method="post" enctype="multipart/form-data" class="mb-4">
-            <label for="archivo" class="block text-lg mb-2">Seleccione un archivo para subir:</label>
-            <input type="file" id="archivo" name="archivo" class="border border-gray-300 p-2 w-full mb-4">
-            <input type="submit" value="Subir" class="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">
-        </form>
-        <div id="progress-container" class="hidden">
-            <label for="progress-bar" class="block text-lg mb-2">Progreso de descarga:</label>
-            <div class="w-full bg-gray-200 rounded-full">
-                <div id="progress-bar" class="bg-blue-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full" style="width: 0%">0%</div>
+<body class="bg-white dark:bg-gray-900 transition-colors duration-200">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="fas fa-download text-[#5D5CDE] mr-3"></i>
+                    <span>Descargador de Videos de YouTube</span>
+                </h1>
+                <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-moon text-gray-600 dark:text-gray-300 dark:hidden"></i>
+                    <i class="fas fa-sun text-gray-300 hidden dark:block"></i>
+                </button>
             </div>
-        </div>
-        <h2 class="text-2xl font-semibold mb-4">Videos descargados:</h2>
-        <ul class="space-y-4">
-            {% for video in videos_descargados %}
-                <li class="bg-white p-4 rounded shadow">
-                    <h3 class="text-lg font-semibold mb-2">{{ video }}</h3>
-                    <video width="320" height="240" controls class="border border-gray-300 rounded-lg shadow-lg w-full h-64 object-cover">
-                        <source src="/offline/{{ video }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="mt-2 flex space-x-2">
-                        <button class="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition duration-300">Eliminar</button>
-                        <a href="/offline/{{ video }}" download class="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition duration-300">Descargar</a>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Input Section -->
+            <section class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8">
+                <!-- YouTube URL Form -->
+                <form id="downloadForm" action="/descargar" method="post" class="space-y-6">
+                    <div>
+                        <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Ingrese la URL del video:
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <input 
+                                type="url" 
+                                id="url" 
+                                name="url"
+                                placeholder="https://www.youtube.com/watch?v=..." 
+                                class="flex-grow block w-full px-4 py-3 rounded-md border border-gray-300 dark:border-gray-700 shadow-sm focus:ring-[#5D5CDE] focus:border-[#5D5CDE] dark:bg-gray-700 dark:text-white text-base"
+                                required
+                            >
+                            <button 
+                                type="submit" 
+                                id="downloadBtn" 
+                                class="inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-[#5D5CDE] hover:bg-[#4a49c0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200"
+                            >
+                                <i class="fas fa-download mr-2"></i> Descargar
+                            </button>
+                        </div>
+                        <p id="url-validation-message" class="mt-2 text-sm text-red-600 dark:text-red-400 hidden">
+                            Por favor, ingrese una URL válida de YouTube.
+                        </p>
                     </div>
-                </li>
-            {% endfor %}
-        </ul>
-        <h2 class="text-2xl font-semibold mb-4">Archivos descargados:</h2>
-        <ul class="space-y-4">
-            {% for archivo in archivos_descargados %}
-                <li class="bg-white p-4 rounded shadow">
-                    <h3 class="text-lg font-semibold mb-2">{{ archivo }}</h3>
-                    {% if archivo.endswith('.mp4') %}
-                        <video width="320" height="240" controls class="border border-gray-300 rounded-lg shadow-lg w-full h-64 object-cover">
-                            <source src="/offline/{{ archivo }}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    {% elif archivo.endswith('.jpg') or archivo.endswith('.jpeg') or archivo.endswith('.png') %}
-                        <img src="/offline/{{ archivo }}" alt="{{ archivo }}" class="border border-gray-300 rounded-lg shadow-lg w-full h-64 object-cover">
+                </form>
+
+                <!-- File Upload Form -->
+                <form id="uploadForm" action="/subir" method="post" enctype="multipart/form-data" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <label for="archivo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Alternativamente, seleccione un archivo para subir:
+                    </label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <i class="fas fa-file-upload mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"></i>
+                            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+                                <label for="archivo" class="relative cursor-pointer rounded-md font-medium text-[#5D5CDE] hover:text-[#4a49c0] focus-within:outline-none">
+                                    <span>Suba un archivo</span>
+                                    <input id="archivo" name="archivo" type="file" class="sr-only">
+                                </label>
+                                <p class="pl-1">o arrastre y suelte</p>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                MP4, WebM, MP3, u otros archivos
+                            </p>
+                            <button 
+                                type="submit" 
+                                id="uploadBtn" 
+                                class="mt-4 inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#5D5CDE] hover:bg-[#4a49c0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200 hidden"
+                            >
+                                <i class="fas fa-cloud-upload-alt mr-2"></i> Subir Archivo
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Progress Bar -->
+                <div id="progress-container" class="mt-8 hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="progress" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Progreso de descarga:
+                        </label>
+                        <span id="progress-percentage" class="text-sm font-medium text-[#5D5CDE]">0%</span>
+                    </div>
+                    <div class="relative w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="absolute top-0 left-0 h-full bg-[#5D5CDE] rounded-full transition-all duration-200" style="width: 0%"></div>
+                    </div>
+                    <div id="progress-status" class="mt-2 text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <span>Preparando descarga...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Downloads Section -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                <!-- Files Section -->
+                <div class="p-4 sm:p-6">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Archivos descargados</h2>
+                    
+                    <div id="files-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamically populated with downloaded files -->
+                        {% for archivo in archivos_descargados %}
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden shadow">
+                            {% if archivo.endswith('.mp4') or archivo.endswith('.webm') %}
+                            <video class="w-full h-40 object-cover" controls>
+                                <source src="/offline/{{ archivo }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            {% elif archivo.endswith('.jpg') or archivo.endswith('.jpeg') or archivo.endswith('.png') %}
+                            <img src="/offline/{{ archivo }}" alt="{{ archivo }}" class="w-full h-40 object-cover">
+                            {% elif archivo.endswith('.mp3') or archivo.endswith('.wav') or archivo.endswith('.ogg') %}
+                            <div class="h-40 w-full flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-600">
+                                <i class="fas fa-music text-4xl text-gray-500 dark:text-gray-400 mb-2"></i>
+                                <audio controls class="w-4/5">
+                                    <source src="/offline/{{ archivo }}" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            </div>
+                            {% else %}
+                            <div class="h-40 w-full flex items-center justify-center">
+                                <i class="fas fa-file-alt text-5xl text-gray-400 dark:text-gray-500"></i>
+                            </div>
+                            {% endif %}
+                            <div class="p-4">
+                                <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ archivo }}</h3>
+                                <div class="mt-3 flex justify-between">
+                                    <a href="/offline/{{ archivo }}" target="_blank" class="text-[#5D5CDE] hover:text-[#4a49c0] text-sm flex items-center">
+                                        <i class="fas fa-external-link-alt mr-1"></i> Abrir
+                                    </a>
+                                    <button onclick="rightClickSaveAs('/offline/{{ archivo }}')" class="download-btn text-[#5D5CDE] hover:text-[#4a49c0] text-sm flex items-center">
+                                        <i class="fas fa-download mr-1"></i> Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if not archivos_descargados %}
+                    <div id="no-files-message" class="py-12 text-center">
+                        <div class="mx-auto h-20 w-20 text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-file text-5xl"></i>
+                        </div>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay archivos</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Descargue videos de YouTube o suba archivos para verlos aquí.</p>
+                    </div>
                     {% endif %}
-                    <a href="/offline/{{ archivo }}" download class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-300 mt-2 inline-block">Descargar</a>
-                </li>
-            {% endfor %}
-        </ul>
-        <div id="resultado" class="mt-4"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-gray-800 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                <p>© 2023 Descargador de Videos de YouTube. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded-md shadow-lg flex items-center transform translate-y-full opacity-0 transition-all duration-300 pointer-events-none z-50">
+        <i id="toast-icon" class="fas fa-check-circle mr-2"></i>
+        <span id="toast-message">Operación completada exitosamente</span>
     </div>
 
     <script>
-        const formulario = document.querySelector('form');
-        formulario.addEventListener('submit', (e) => {
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Check system preference
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        // URL Validation
+        const urlInput = document.getElementById('url');
+        const validationMessage = document.getElementById('url-validation-message');
+        const downloadForm = document.getElementById('downloadForm');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const progressStatus = document.getElementById('progress-status').querySelector('span');
+
+        urlInput.addEventListener('input', () => {
+            // Hide validation message as user types
+            validationMessage.classList.add('hidden');
+        });
+
+        // Download Form Submission - Handle with AJAX
+        downloadForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const url = document.querySelector('#url').value;
-            const progressContainer = document.querySelector('#progress-container');
-            const progressBar = document.querySelector('#progress-bar');
+            
+            // Validate YouTube URL
+            const url = urlInput.value.trim();
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+            
+            if (!youtubeRegex.test(url)) {
+                validationMessage.classList.remove('hidden');
+                showToast('Por favor, ingrese una URL válida de YouTube.', 'error');
+                return;
+            }
+            
+            // Show progress container
             progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            progressStatus.textContent = 'Iniciando descarga...';
+            
+            // Create FormData and send AJAX request
+            const formData = new FormData(downloadForm);
+            
             fetch('/descargar', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: `url=${url}`
+                body: formData
             })
-            .then((response) => response.json())
-            .then((data) => {
-                document.querySelector('#resultado').innerHTML = data.resultado;
-                // Recargar la página para mostrar el video descargado
-                window.location.reload();
+            .then(response => response.json())
+            .then(data => {
+                // Set progress to complete
+                progressBar.style.width = '100%';
+                progressPercentage.textContent = '100%';
+                progressStatus.textContent = '¡Descarga completada!';
+                
+                // Show success message
+                showToast(data.resultado || 'Video descargado con éxito', 'success');
+                
+                // Reload page after 2 seconds to show the new file
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
             })
-            .catch((error) => console.error(error));
+            .catch(error => {
+                progressContainer.classList.add('hidden');
+                showToast('Error al descargar el video: ' + error, 'error');
+            });
+            
+            // Simulate progress while waiting for response
+            simulateProgress();
+        });
 
-            // Actualizar el progreso de descarga
-            const eventSource = new EventSource('/progreso');
-            eventSource.onmessage = function(event) {
-                const progreso = JSON.parse(event.data).progreso;                progressBar.style.width = `${progreso}%`;
-                progressBar.textContent = `${progreso}%`;
-                if (progreso >= 100) {
-                    eventSource.close();
+        // File Upload Handling
+        const fileUpload = document.getElementById('archivo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        
+        fileUpload.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const fileName = e.target.files[0].name;
+                uploadBtn.classList.remove('hidden');
+                showToast(`Archivo "${fileName}" seleccionado. Haga clic en "Subir Archivo" para continuar.`, 'info');
+            } else {
+                uploadBtn.classList.add('hidden');
+            }
+        });
+        
+        // Upload Form Submission
+        const uploadForm = document.getElementById('uploadForm');
+        
+        uploadForm.addEventListener('submit', (e) => {
+            // Do not prevent default - let the form submit normally
+            // Show progress
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            progressStatus.textContent = 'Subiendo archivo...';
+            
+            // Simulate progress
+            simulateProgress();
+        });
+
+        // Progress Simulation
+        function simulateProgress() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress >= 90) {
+                    // Stop at 90% - the final 10% will happen when the server responds
+                    clearInterval(interval);
+                    return;
                 }
-            };
-        });
+                
+                progress += Math.floor(Math.random() * 5) + 1;
+                progress = Math.min(progress, 90);
+                
+                progressBar.style.width = `${progress}%`;
+                progressPercentage.textContent = `${progress}%`;
+                
+                if (progress < 30) {
+                    progressStatus.textContent = 'Iniciando proceso...';
+                } else if (progress < 60) {
+                    progressStatus.textContent = 'Descargando contenido...';
+                } else {
+                    progressStatus.textContent = 'Procesando archivo...';
+                }
+            }, 300);
+        }
 
-        // Hacer que los videos se reproduzcan en la página
-        const videos = document.querySelectorAll('video');
-        videos.forEach((video) => {
-            video.addEventListener('click', () => {
-                video.play();
-            });
-        });
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            
+            // Set message
+            toastMessage.textContent = message;
+            
+            // Set icon and color based on type
+            switch (type) {
+                case 'error':
+                    toast.classList.remove('bg-green-500', 'bg-blue-500');
+                    toast.classList.add('bg-red-500');
+                    toastIcon.classList.remove('fa-check-circle', 'fa-info-circle');
+                    toastIcon.classList.add('fa-times-circle');
+                    break;
+                case 'info':
+                    toast.classList.remove('bg-green-500', 'bg-red-500');
+                    toast.classList.add('bg-blue-500');
+                    toastIcon.classList.remove('fa-check-circle', 'fa-times-circle');
+                    toastIcon.classList.add('fa-info-circle');
+                    break;
+                default:
+                    toast.classList.remove('bg-red-500', 'bg-blue-500');
+                    toast.classList.add('bg-green-500');
+                    toastIcon.classList.remove('fa-times-circle', 'fa-info-circle');
+                    toastIcon.classList.add('fa-check-circle');
+            }
+            
+            // Show toast
+            toast.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
 
-        // Agregar animaciones con GSAP
-        gsap.from("h1", { duration: 1, y: -50, opacity: 0 });
-        gsap.from("form", { duration: 1, x: -50, opacity: 0, delay: 0.5 });
-        gsap.from("h2", { duration: 1, x: 50, opacity: 0, delay: 1 });
-        gsap.from("ul li", { duration: 1, y: 50, opacity: 0, stagger: 0.2, delay: 1.5 });
-
-        // Agregar funcionalidad de eliminar video
-        const botonesEliminar = document.querySelectorAll('button');
-        botonesEliminar.forEach((boton, index) => {
-            boton.addEventListener('click', () => {
-                const video = videos[index];
-                video.parentElement.remove();
-                fetch(`/eliminar/${video.src.split('/').pop()}`)
-                    .then(() => console.log('Video eliminado correctamente'));
-                window.location.reload();
-                // Recargar la página para mostrar el video eliminado                
-            });
-        });
+        // Helper function to guide users to save files
+        function rightClickSaveAs(fileUrl) {
+            showToast('Para guardar: Haga clic derecho en el archivo y seleccione "Guardar como..."', 'info');
+        }
     </script>
 </body>
 </html>
