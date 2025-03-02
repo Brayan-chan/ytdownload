@@ -6,6 +6,15 @@
     <title>Descargador de Videos de YouTube</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- PDF.js para visualización de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // Configurar worker de PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
+    <!-- Highlightjs para destacado de código en archivos de texto -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 </head>
 <body class="bg-white dark:bg-gray-900 transition-colors duration-200">
     <div class="min-h-screen flex flex-col">
@@ -113,29 +122,99 @@
                         <!-- Dynamically populated with downloaded files -->
                         {% for archivo in archivos_descargados %}
                         <div class="bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden shadow">
-                            {% if archivo.endswith('.mp4') or archivo.endswith('.webm') %}
-                            <video class="w-full h-40 object-cover" controls>
-                                <source src="/offline/{{ archivo }}" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                            {% elif archivo.endswith('.jpg') or archivo.endswith('.jpeg') or archivo.endswith('.png') %}
-                            <img src="/offline/{{ archivo }}" alt="{{ archivo }}" class="w-full h-40 object-cover">
-                            {% elif archivo.endswith('.mp3') or archivo.endswith('.wav') or archivo.endswith('.ogg') %}
-                            <div class="h-40 w-full flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-600">
-                                <i class="fas fa-music text-4xl text-gray-500 dark:text-gray-400 mb-2"></i>
-                                <audio controls class="w-4/5">
-                                    <source src="/offline/{{ archivo }}" type="audio/mpeg">
-                                    Your browser does not support the audio element.
-                                </audio>
+                            <div class="relative group">
+                                {% if archivo.endswith('.mp4') or archivo.endswith('.webm') %}
+                                <video class="w-full h-40 object-cover" controls>
+                                    <source src="/offline/{{ archivo }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button 
+                                        onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                        class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                        title="Vista previa"
+                                    >
+                                        <i class="fas fa-eye text-lg"></i>
+                                    </button>
+                                </div>
+                                {% elif archivo.endswith('.jpg') or archivo.endswith('.jpeg') or archivo.endswith('.png') or archivo.endswith('.gif') %}
+                                <img src="/offline/{{ archivo }}" alt="{{ archivo }}" class="w-full h-40 object-cover">
+                                <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button 
+                                        onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                        class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                        title="Vista previa"
+                                    >
+                                        <i class="fas fa-eye text-lg"></i>
+                                    </button>
+                                </div>
+                                {% elif archivo.endswith('.mp3') or archivo.endswith('.wav') or archivo.endswith('.ogg') %}
+                                <div class="h-40 w-full flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-music text-4xl text-gray-500 dark:text-gray-400 mb-2"></i>
+                                    <audio controls class="w-4/5">
+                                        <source src="/offline/{{ archivo }}" type="audio/mpeg">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% elif archivo.endswith('.pdf') %}
+                                <div class="h-40 w-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-file-pdf text-5xl text-red-500"></i>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% elif archivo.endswith('.txt') or archivo.endswith('.csv') or archivo.endswith('.json') or archivo.endswith('.html') or archivo.endswith('.css') or archivo.endswith('.js') %}
+                                <div class="h-40 w-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-file-alt text-5xl text-gray-500 dark:text-gray-400"></i>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="h-40 w-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-file text-5xl text-gray-500 dark:text-gray-400"></i>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
-                            {% else %}
-                            <div class="h-40 w-full flex items-center justify-center">
-                                <i class="fas fa-file-alt text-5xl text-gray-400 dark:text-gray-500"></i>
-                            </div>
-                            {% endif %}
                             <div class="p-4">
                                 <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ archivo }}</h3>
                                 <div class="mt-3 flex justify-between">
+                                    <button
+                                        onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')"
+                                        class="text-[#5D5CDE] hover:text-[#4a49c0] text-sm flex items-center"
+                                    >
+                                        <i class="fas fa-eye mr-1"></i> Ver
+                                    </button>
                                     <a href="/offline/{{ archivo }}" target="_blank" class="text-[#5D5CDE] hover:text-[#4a49c0] text-sm flex items-center">
                                         <i class="fas fa-external-link-alt mr-1"></i> Abrir
                                     </a>
@@ -169,8 +248,115 @@
         </footer>
     </div>
 
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            
+            <!-- Modal panel -->
+            <div class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 w-full sm:max-w-5xl">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 id="previewModalTitle" class="text-lg font-medium text-gray-900 dark:text-white truncate">
+                        Vista previa del archivo
+                    </h3>
+                    <button id="closePreviewModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
+                        <span class="sr-only">Cerrar</span>
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Modal content -->
+                <div class="px-6 py-4">
+                    <!-- Loading indicator -->
+                    <div id="previewLoading" class="flex items-center justify-center py-10">
+                        <i class="fas fa-circle-notch fa-spin text-4xl text-[#5D5CDE]"></i>
+                        <span class="ml-3 text-gray-700 dark:text-gray-300">Cargando vista previa...</span>
+                    </div>
+
+                    <!-- Container for different preview types -->
+                    <div id="previewContainer" class="hidden">
+                        <!-- Image preview -->
+                        <div id="imagePreview" class="hidden">
+                            <img id="previewImage" src="" alt="Vista previa de imagen" class="max-w-full mx-auto max-h-[70vh] object-contain">
+                        </div>
+                        
+                        <!-- PDF preview -->
+                        <div id="pdfPreview" class="hidden">
+                            <div class="flex mb-3 items-center justify-between bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                <div>
+                                    <button id="prevPage" class="px-3 py-1 bg-[#5D5CDE] text-white rounded hover:bg-[#4a49c0] mr-2 disabled:opacity-50">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button id="nextPage" class="px-3 py-1 bg-[#5D5CDE] text-white rounded hover:bg-[#4a49c0] disabled:opacity-50">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                    <span id="pdfPageInfo" class="ml-4 text-sm text-gray-700 dark:text-gray-300">
+                                        Página <span id="pdfCurrentPage">0</span> de <span id="pdfTotalPages">0</span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <button id="zoomOut" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500 mr-2">
+                                        <i class="fas fa-search-minus"></i>
+                                    </button>
+                                    <button id="zoomIn" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="pdfCanvas" class="max-w-full mx-auto border border-gray-300 dark:border-gray-600"></canvas>
+                        </div>
+                        
+                        <!-- Video preview -->
+                        <div id="videoPreview" class="hidden">
+                            <video id="previewVideo" controls class="max-w-full mx-auto max-h-[70vh]">
+                                <source src="" type="video/mp4">
+                                Tu navegador no soporta la reproducción de videos.
+                            </video>
+                        </div>
+                        
+                        <!-- Audio preview -->
+                        <div id="audioPreview" class="hidden py-10 flex flex-col items-center justify-center">
+                            <i class="fas fa-music text-5xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                            <audio id="previewAudio" controls class="w-full max-w-lg">
+                                <source src="" type="audio/mpeg">
+                                Tu navegador no soporta la reproducción de audio.
+                            </audio>
+                        </div>
+                        
+                        <!-- Text preview -->
+                        <div id="textPreview" class="hidden">
+                            <pre id="previewText" class="bg-gray-100 dark:bg-gray-700 p-4 rounded overflow-x-auto max-h-[70vh] text-sm text-gray-800 dark:text-gray-200"></pre>
+                        </div>
+                        
+                        <!-- Unsupported file type -->
+                        <div id="unsupportedPreview" class="hidden text-center py-10">
+                            <i class="fas fa-file-alt text-5xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                            <p class="text-gray-700 dark:text-gray-300">Vista previa no disponible para este tipo de archivo.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Descarga el archivo para visualizarlo.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal footer -->
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex flex-col sm:flex-row sm:justify-end gap-3">
+                    <a id="previewDownloadLink" href="#" target="_blank" class="inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#5D5CDE] hover:bg-[#4a49c0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200">
+                        <i class="fas fa-external-link-alt mr-2"></i> Abrir en nueva pestaña
+                    </a>
+                    <button id="previewDownloadBtn" class="inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                        <i class="fas fa-download mr-2"></i> Descargar
+                    </button>
+                    <button id="closePreviewModalBtn" class="mt-3 sm:mt-0 inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded-md shadow-lg flex items-center transform translate-y-full opacity-0 transition-all duration-300 pointer-events-none z-50">
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded-md shadow-lg flex items-center transform translate-y-full opacity-0 transition-all duration-300 pointer-events-none z-40">
         <i id="toast-icon" class="fas fa-check-circle mr-2"></i>
         <span id="toast-message">Operación completada exitosamente</span>
     </div>
@@ -351,6 +537,333 @@
         function rightClickSaveAs(fileUrl) {
             showToast('Para guardar: Haga clic derecho en el archivo y seleccione "Guardar como..."', 'info');
         }
+
+        // ==============================================
+        // File Preview Functionality
+        // ==============================================
+        
+        // Modal elements
+        const previewModal = document.getElementById('previewModal');
+        const closePreviewModal = document.getElementById('closePreviewModal');
+        const closePreviewModalBtn = document.getElementById('closePreviewModalBtn');
+        const previewModalTitle = document.getElementById('previewModalTitle');
+        const previewLoading = document.getElementById('previewLoading');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewDownloadLink = document.getElementById('previewDownloadLink');
+        const previewDownloadBtn = document.getElementById('previewDownloadBtn');
+        
+        // Preview type containers
+        const imagePreview = document.getElementById('imagePreview');
+        const pdfPreview = document.getElementById('pdfPreview');
+        const videoPreview = document.getElementById('videoPreview');
+        const audioPreview = document.getElementById('audioPreview');
+        const textPreview = document.getElementById('textPreview');
+        const unsupportedPreview = document.getElementById('unsupportedPreview');
+        
+        // Preview elements
+        const previewImage = document.getElementById('previewImage');
+        const previewVideo = document.getElementById('previewVideo');
+        const previewAudio = document.getElementById('previewAudio');
+        const previewText = document.getElementById('previewText');
+        
+        // PDF elements
+        const pdfCanvas = document.getElementById('pdfCanvas');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pdfCurrentPage = document.getElementById('pdfCurrentPage');
+        const pdfTotalPages = document.getElementById('pdfTotalPages');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        
+        // PDF variables
+        let pdfDoc = null;
+        let pdfPageNum = 1;
+        let pdfPageRendering = false;
+        let pdfPageNumPending = null;
+        let pdfScale = 1.0;
+        
+        // Open the preview modal
+        function previewFile(fileUrl, fileName) {
+            // Reset modal state
+            resetPreviewModal();
+            
+            // Update modal title
+            previewModalTitle.textContent = fileName || 'Vista previa del archivo';
+            
+            // Show loading indicator
+            previewLoading.classList.remove('hidden');
+            
+            // Set download links
+            previewDownloadLink.href = fileUrl;
+            previewDownloadBtn.onclick = () => rightClickSaveAs(fileUrl);
+            
+            // Show modal
+            previewModal.classList.remove('hidden');
+            
+            // Determine file type and load appropriate preview
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExtension)) {
+                loadImagePreview(fileUrl);
+            } else if (fileExtension === 'pdf') {
+                loadPdfPreview(fileUrl);
+            } else if (['mp4', 'webm', 'ogg', 'mov'].includes(fileExtension)) {
+                loadVideoPreview(fileUrl);
+            } else if (['mp3', 'wav', 'ogg', 'aac', 'm4a'].includes(fileExtension)) {
+                loadAudioPreview(fileUrl);
+            } else if (['txt', 'csv', 'json', 'html', 'css', 'js', 'xml', 'md', 'py', 'java', 'c', 'cpp', 'php'].includes(fileExtension)) {
+                loadTextPreview(fileUrl, fileExtension);
+            } else {
+                // Unsupported file type
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            }
+        }
+        
+        // Reset modal to initial state
+        function resetPreviewModal() {
+            // Hide all preview containers
+            imagePreview.classList.add('hidden');
+            pdfPreview.classList.add('hidden');
+            videoPreview.classList.add('hidden');
+            audioPreview.classList.add('hidden');
+            textPreview.classList.add('hidden');
+            unsupportedPreview.classList.add('hidden');
+            
+            // Hide main container
+            previewContainer.classList.add('hidden');
+            
+            // Reset PDF viewer
+            if (pdfDoc) {
+                pdfDoc = null;
+            }
+            
+            // Reset audio/video
+            previewVideo.pause();
+            previewVideo.src = '';
+            previewAudio.pause();
+            previewAudio.src = '';
+            
+            // Reset image
+            previewImage.src = '';
+            
+            // Reset text
+            previewText.textContent = '';
+        }
+        
+        // Hide loading indicator and show preview container
+        function hideLoading() {
+            previewLoading.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+        }
+        
+        // Load image preview
+        function loadImagePreview(fileUrl) {
+            previewImage.onload = () => {
+                hideLoading();
+                imagePreview.classList.remove('hidden');
+            };
+            
+            previewImage.onerror = () => {
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            };
+            
+            previewImage.src = fileUrl;
+        }
+        
+        // Load video preview
+        function loadVideoPreview(fileUrl) {
+            const videoSource = previewVideo.querySelector('source');
+            videoSource.src = fileUrl;
+            
+            previewVideo.load();
+            
+            previewVideo.oncanplay = () => {
+                hideLoading();
+                videoPreview.classList.remove('hidden');
+            };
+            
+            previewVideo.onerror = () => {
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            };
+        }
+        
+        // Load audio preview
+        function loadAudioPreview(fileUrl) {
+            const audioSource = previewAudio.querySelector('source');
+            audioSource.src = fileUrl;
+            
+            previewAudio.load();
+            
+            previewAudio.oncanplay = () => {
+                hideLoading();
+                audioPreview.classList.remove('hidden');
+            };
+            
+            previewAudio.onerror = () => {
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            };
+        }
+        
+        // Load text file preview
+        function loadTextPreview(fileUrl, fileExtension) {
+            fetch(fileUrl)
+                .then(response => response.text())
+                .then(text => {
+                    previewText.textContent = text;
+                    
+                    // Apply syntax highlighting if applicable
+                    if (['html', 'css', 'js', 'xml', 'json', 'py', 'java', 'c', 'cpp', 'php'].includes(fileExtension) && typeof hljs !== 'undefined') {
+                        previewText.classList.add(`language-${fileExtension}`);
+                        hljs.highlightElement(previewText);
+                    }
+                    
+                    hideLoading();
+                    textPreview.classList.remove('hidden');
+                })
+                .catch(() => {
+                    hideLoading();
+                    unsupportedPreview.classList.remove('hidden');
+                });
+        }
+        
+        // Load PDF preview using PDF.js
+        function loadPdfPreview(fileUrl) {
+            pdfjsLib.getDocument(fileUrl).promise.then(function(pdf) {
+                pdfDoc = pdf;
+                pdfTotalPages.textContent = pdf.numPages;
+                
+                // Initial page rendering
+                pdfPageNum = 1;
+                renderPdfPage(pdfPageNum);
+                
+                // Update buttons state
+                updatePdfButtons();
+                
+                // Show PDF container
+                hideLoading();
+                pdfPreview.classList.remove('hidden');
+            }).catch(function(error) {
+                console.error('Error loading PDF:', error);
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            });
+        }
+        
+        // Render PDF page
+        function renderPdfPage(num) {
+            pdfPageRendering = true;
+            
+            // Update current page counter
+            pdfCurrentPage.textContent = num;
+            
+            // Get page
+            pdfDoc.getPage(num).then(function(page) {
+                // Set scale (zoom level)
+                const viewport = page.getViewport({ scale: pdfScale });
+                pdfCanvas.height = viewport.height;
+                pdfCanvas.width = viewport.width;
+                
+                // Render PDF page
+                const renderContext = {
+                    canvasContext: pdfCanvas.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                
+                // Wait for rendering to finish
+                renderTask.promise.then(function() {
+                    pdfPageRendering = false;
+                    
+                    // Check if there's a pending page
+                    if (pdfPageNumPending !== null) {
+                        renderPdfPage(pdfPageNumPending);
+                        pdfPageNumPending = null;
+                    }
+                });
+            });
+        }
+        
+        // Go to previous page
+        function previousPdfPage() {
+            if (pdfPageNum <= 1) {
+                return;
+            }
+            pdfPageNum--;
+            queuePdfRender(pdfPageNum);
+            updatePdfButtons();
+        }
+        
+        // Go to next page
+        function nextPdfPage() {
+            if (pdfPageNum >= pdfDoc.numPages) {
+                return;
+            }
+            pdfPageNum++;
+            queuePdfRender(pdfPageNum);
+            updatePdfButtons();
+        }
+        
+        // Queue rendering of the page
+        function queuePdfRender(num) {
+            if (pdfPageRendering) {
+                pdfPageNumPending = num;
+            } else {
+                renderPdfPage(num);
+            }
+        }
+        
+        // Update PDF buttons state
+        function updatePdfButtons() {
+            prevPageBtn.disabled = pdfPageNum <= 1;
+            nextPageBtn.disabled = pdfPageNum >= pdfDoc.numPages;
+        }
+        
+        // Zoom in
+        function zoomIn() {
+            pdfScale += 0.25;
+            queuePdfRender(pdfPageNum);
+        }
+        
+        // Zoom out
+        function zoomOut() {
+            if (pdfScale <= 0.5) return;
+            pdfScale -= 0.25;
+            queuePdfRender(pdfPageNum);
+        }
+        
+        // PDF navigation event listeners
+        prevPageBtn.addEventListener('click', previousPdfPage);
+        nextPageBtn.addEventListener('click', nextPdfPage);
+        zoomInBtn.addEventListener('click', zoomIn);
+        zoomOutBtn.addEventListener('click', zoomOut);
+        
+        // Close modal on button clicks
+        closePreviewModal.addEventListener('click', () => {
+            previewModal.classList.add('hidden');
+        });
+        
+        closePreviewModalBtn.addEventListener('click', () => {
+            previewModal.classList.add('hidden');
+        });
+        
+        // Close modal on background click
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal) {
+                previewModal.classList.add('hidden');
+            }
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !previewModal.classList.contains('hidden')) {
+                previewModal.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
