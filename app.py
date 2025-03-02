@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, redirect, url_for
 import yt_dlp
 import os
 
@@ -30,9 +30,20 @@ def descargar_video(url):
 # Ruta para la página de inicio
 @app.route('/')
 def index():
-    # Obtener la lista de videos descargados
-    videos_descargados = os.listdir('offline')
-    return render_template('index.html', videos_descargados=videos_descargados)
+    # Obtener la lista de archivos descargados
+    archivos_descargados = os.listdir('offline')
+    return render_template('index.html', archivos_descargados=archivos_descargados)
+
+# Ruta para subir un archivo
+@app.route('/subir', methods=['POST'])
+def subir():
+    if 'archivo' not in request.files:
+        return redirect(url_for('index'))
+    archivo = request.files['archivo']
+    if archivo.filename == '':
+        return redirect(url_for('index'))
+    archivo.save(os.path.join('offline', archivo.filename))
+    return redirect(url_for('index'))
 
 # Ruta para descargar un video
 @app.route('/descargar', methods=['POST'])
@@ -41,9 +52,9 @@ def descargar():
     resultado = descargar_video(url)
     return jsonify({'resultado': resultado})
 
-# Ruta para servir los videos descargados
+# Ruta para servir los archivos descargados
 @app.route('/offline/<path:path>')
-def send_video(path):
+def send_file(path):
     return send_from_directory('offline', path)
 
 if __name__ == '__main__':
