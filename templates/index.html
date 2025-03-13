@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Descargador de Videos de YouTube</title>
+    <title>DownCloud</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- PDF.js para visualización de PDFs -->
@@ -13,8 +13,101 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
     </script>
     <!-- Highlightjs para destacado de código en archivos de texto -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <style>
+        /*!
+  Theme: Default Improved
+  Description: Improved highlight.js style with better colors
+  Author: (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
+  Maintainer: @highlightjs/core-team
+  Website: https://highlightjs.org/
+  License: see project LICENSE
+  Touched: 2021
+*/
+pre code.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 1em;
+    background: #2d2d2d;
+    color: #ccc;
+  }
+  code.hljs {
+    padding: 3px 5px;
+    background: #2d2d2d;
+    color: #ccc;
+  }
+  .hljs {
+    background: #2d2d2d;
+    color: #ccc;
+  }
+  .hljs-comment {
+    color: #999;
+    font-style: italic;
+  }
+  .hljs-punctuation,
+  .hljs-tag {
+    color: #f8f8f2;
+  }
+  .hljs-tag .hljs-attr,
+  .hljs-tag .hljs-name {
+    color: #f92672;
+  }
+  .hljs-attribute,
+  .hljs-doctag,
+  .hljs-keyword,
+  .hljs-meta .hljs-keyword,
+  .hljs-name,
+  .hljs-selector-tag {
+    font-weight: 700;
+    color: #66d9ef;
+  }
+  .hljs-deletion,
+  .hljs-number,
+  .hljs-quote,
+  .hljs-selector-class,
+  .hljs-selector-id,
+  .hljs-string,
+  .hljs-template-tag,
+  .hljs-type {
+    color: #a6e22e;
+  }
+  .hljs-section,
+  .hljs-title {
+    color: #e6db74;
+    font-weight: 700;
+  }
+  .hljs-link,
+  .hljs-operator,
+  .hljs-regexp,
+  .hljs-selector-attr,
+  .hljs-selector-pseudo,
+  .hljs-symbol,
+  .hljs-template-variable,
+  .hljs-variable {
+    color: #fd971f;
+  }
+  .hljs-literal {
+    color: #ae81ff;
+  }
+  .hljs-addition,
+  .hljs-built_in,
+  .hljs-bullet,
+  .hljs-code {
+    color: #a6e22e;
+  }
+  .hljs-meta {
+    color: #f8f8f2;
+  }
+  .hljs-meta .hljs-string {
+    color: #e6db74;
+  }
+  .hljs-emphasis {
+    font-style: italic;
+  }
+  .hljs-strong {
+    font-weight: 700;
+  }  
+    </style>
 </head>
 <body class="bg-white dark:bg-gray-900 transition-colors duration-200">
     <div class="min-h-screen flex flex-col">
@@ -23,11 +116,11 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
                     <i class="fas fa-download text-[#5D5CDE] mr-3"></i>
-                    <span>Descargador de Videos de YouTube</span>
+                    <span>DownCloud</span>
                 </h1>
                 <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                    <i class="fas fa-moon text-gray-600 dark:text-gray-300 dark:hidden"></i>
-                    <i class="fas fa-sun text-gray-300 hidden dark:block"></i>
+                    <i class="fas fa-moon text-gray-600 dark:text-gray-300"></i>
+                    <i class="fas fa-sun text-gray-300 hidden"></i>
                 </button>
             </div>
         </header>
@@ -70,7 +163,7 @@
                     <label for="archivo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Alternativamente, seleccione un archivo para subir:
                     </label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-md">
+                    <div id="dropZone" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-md transition-colors duration-200">
                         <div class="space-y-1 text-center">
                             <i class="fas fa-file-upload mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"></i>
                             <div class="flex text-sm text-gray-600 dark:text-gray-400">
@@ -243,7 +336,7 @@
         <!-- Footer -->
         <footer class="bg-white dark:bg-gray-800 shadow">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-                <p>© 2023 Descargador de Videos de YouTube. Todos los derechos reservados.</p>
+                <p>© 2025. Desarrollado por 🚀Brayan-chan🚀.</p>
             </div>
         </footer>
     </div>
@@ -362,17 +455,41 @@
     </div>
 
     <script>
-        // Theme Toggle
+        // Theme Toggle functionality
         const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
         
-        // Check system preference
+        // Check system preference for initial theme
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            document.documentElement.classList.add('dark');
+            htmlElement.classList.add('dark');
         }
         
+        // Make sure the initial state of the theme icons matches the actual theme
+        updateThemeIcons();
+        
+        // Toggle theme when button is clicked
         themeToggle.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
+            htmlElement.classList.toggle('dark');
+            updateThemeIcons();
+            // Mostrar notificación para confirmar el cambio
+            const isDarkMode = htmlElement.classList.contains('dark');
+            showToast(isDarkMode ? 'Modo oscuro activado' : 'Modo claro activado', 'info');
         });
+        
+        // Update the icons to match the current theme
+        function updateThemeIcons() {
+            const isDarkMode = htmlElement.classList.contains('dark');
+            const moonIcon = themeToggle.querySelector('.fa-moon');
+            const sunIcon = themeToggle.querySelector('.fa-sun');
+            
+            if (isDarkMode) {
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+            } else {
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+            }
+        }
 
         // URL Validation
         const urlInput = document.getElementById('url');
@@ -442,7 +559,9 @@
         // File Upload Handling
         const fileUpload = document.getElementById('archivo');
         const uploadBtn = document.getElementById('uploadBtn');
+        const dropZone = document.getElementById('dropZone');
         
+        // Regular file input change handler
         fileUpload.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
                 const fileName = e.target.files[0].name;
@@ -452,6 +571,54 @@
                 uploadBtn.classList.add('hidden');
             }
         });
+        
+        // Drag and drop functionality
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        // Highlight drop zone when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        // Unhighlight drop zone when item is dragged out or dropped
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        // Handle dropped files
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        function highlight() {
+            dropZone.classList.add('border-[#5D5CDE]', 'bg-indigo-50', 'dark:bg-indigo-900/10');
+        }
+        
+        function unhighlight() {
+            dropZone.classList.remove('border-[#5D5CDE]', 'bg-indigo-50', 'dark:bg-indigo-900/10');
+        }
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                // Update the file input with the dropped file
+                fileUpload.files = files;
+                
+                // Show the upload button
+                const fileName = files[0].name;
+                uploadBtn.classList.remove('hidden');
+                showToast(`Archivo "${fileName}" listo para subir. Haga clic en "Subir Archivo" para continuar.`, 'info');
+            }
+        }
         
         // Upload Form Submission
         const uploadForm = document.getElementById('uploadForm');
