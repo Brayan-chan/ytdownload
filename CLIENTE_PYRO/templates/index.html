@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Descargador YouTube</title>
+</head>
+<body>
+    <h1>Descargar video de YouTube</h1>
+    <form method="POST">
+        <input type="text" name="url" placeholder="URL del video" required>
+        <button type="submit">Descargar</button>
+    </form>
+    {% if mensaje %}
+        <p>{{ mensaje }}</p>
+    {% endif %}
+</body>
+</html>
