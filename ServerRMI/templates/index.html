@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DownCloud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- PDF.js para visualización de PDFs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // Configurar worker de PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
+    <!-- Highlightjs para destacado de código en archivos de texto -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <style>
+        /*!
+  Theme: Default Improved
+  Description: Improved highlight.js style with better colors
+  Author: (c) Ivan Sagalaev <maniac@softwaremaniacs.org>
+  Maintainer: @highlightjs/core-team
+  Website: https://highlightjs.org/
+  License: see project LICENSE
+  Touched: 2021
+*/
+pre code.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 1em;
+    background: #2d2d2d;
+    color: #ccc;
+  }
+  code.hljs {
+    padding: 3px 5px;
+    background: #2d2d2d;
+    color: #ccc;
+  }
+  .hljs {
+    background: #2d2d2d;
+    color: #ccc;
+  }
+  .hljs-comment {
+    color: #999;
+    font-style: italic;
+  }
+  .hljs-punctuation,
+  .hljs-tag {
+    color: #f8f8f2;
+  }
+  .hljs-tag .hljs-attr,
+  .hljs-tag .hljs-name {
+    color: #f92672;
+  }
+  .hljs-attribute,
+  .hljs-doctag,
+  .hljs-keyword,
+  .hljs-meta .hljs-keyword,
+  .hljs-name,
+  .hljs-selector-tag {
+    font-weight: 700;
+    color: #66d9ef;
+  }
+  .hljs-deletion,
+  .hljs-number,
+  .hljs-quote,
+  .hljs-selector-class,
+  .hljs-selector-id,
+  .hljs-string,
+  .hljs-template-tag,
+  .hljs-type {
+    color: #a6e22e;
+  }
+  .hljs-section,
+  .hljs-title {
+    color: #e6db74;
+    font-weight: 700;
+  }
+  .hljs-link,
+  .hljs-operator,
+  .hljs-regexp,
+  .hljs-selector-attr,
+  .hljs-selector-pseudo,
+  .hljs-symbol,
+  .hljs-template-variable,
+  .hljs-variable {
+    color: #fd971f;
+  }
+  .hljs-literal {
+    color: #ae81ff;
+  }
+  .hljs-addition,
+  .hljs-built_in,
+  .hljs-bullet,
+  .hljs-code {
+    color: #a6e22e;
+  }
+  .hljs-meta {
+    color: #f8f8f2;
+  }
+  .hljs-meta .hljs-string {
+    color: #e6db74;
+  }
+  .hljs-emphasis {
+    font-style: italic;
+  }
+  .hljs-strong {
+    font-weight: 700;
+  }  
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 transition-colors duration-200">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="fas fa-download text-[#5D5CDE] mr-3"></i>
+                    <span>DownCloud</span>
+                </h1>
+                <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-moon text-gray-600 dark:text-gray-300"></i>
+                    <i class="fas fa-sun text-gray-300 hidden"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Input Section -->
+            <section class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-8">
+                <!-- YouTube URL Form -->
+                <form id="downloadForm" action="/descargar" method="post" class="space-y-6">
+                    <div>
+                        <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Ingrese la URL del video:
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <input 
+                                type="url" 
+                                id="url" 
+                                name="url"
+                                placeholder="https://www.youtube.com/watch?v=..." 
+                                class="flex-grow block w-full px-4 py-3 rounded-md border border-gray-300 dark:border-gray-700 shadow-sm focus:ring-[#5D5CDE] focus:border-[#5D5CDE] dark:bg-gray-700 dark:text-white text-base"
+                                required
+                            >
+                            <button 
+                                type="submit" 
+                                id="downloadBtn" 
+                                class="inline-flex justify-center items-center px-6 py-3 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-[#5D5CDE] hover:bg-[#4a49c0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200"
+                            >
+                                <i class="fas fa-download mr-2"></i> Descargar
+                            </button>
+                        </div>
+                        <p id="url-validation-message" class="mt-2 text-sm text-red-600 dark:text-red-400 hidden">
+                            Por favor, ingrese una URL válida de YouTube.
+                        </p>
+                    </div>
+                </form>
+
+                <!-- File Upload Form -->
+                <form id="uploadForm" action="/subir" method="post" enctype="multipart/form-data" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <label for="archivo" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Alternativamente, seleccione un archivo para subir:
+                    </label>
+                    <div id="dropZone" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-md transition-colors duration-200">
+                        <div class="space-y-1 text-center">
+                            <i class="fas fa-file-upload mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"></i>
+                            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+                                <label for="archivo" class="relative cursor-pointer rounded-md font-medium text-[#5D5CDE] hover:text-[#4a49c0] focus-within:outline-none">
+                                    <span>Suba un archivo</span>
+                                    <input id="archivo" name="archivo" type="file" class="sr-only">
+                                </label>
+                                <p class="pl-1">o arrastre y suelte</p>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                MP4, WebM, MP3, u otros archivos
+                            </p>
+                            <button 
+                                type="submit" 
+                                id="uploadBtn" 
+                                class="mt-4 inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#5D5CDE] hover:bg-[#4a49c0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200 hidden"
+                            >
+                                <i class="fas fa-cloud-upload-alt mr-2"></i> Subir Archivo
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Progress Bar -->
+                <div id="progress-container" class="mt-8 hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="progress" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Progreso de descarga:
+                        </label>
+                        <span id="progress-percentage" class="text-sm font-medium text-[#5D5CDE]">0%</span>
+                    </div>
+                    <div class="relative w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="absolute top-0 left-0 h-full bg-[#5D5CDE] rounded-full transition-all duration-200" style="width: 0%"></div>
+                    </div>
+                    <div id="progress-status" class="mt-2 text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <span>Preparando descarga...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Downloads Section -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                <!-- Files Section -->
+                <div class="p-4 sm:p-6">
+                    <h2 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Archivos descargados</h2>
+                    
+                    <div id="files-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Dynamically populated with downloaded files -->
+                        {% for archivo in archivos_descargados %}
+                        <div class="bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden shadow">
+                            <div class="relative group">
+                                {% if archivo.endswith('.mp4') or archivo.endswith('.webm') %}
+                                <video class="w-full h-40 object-cover" controls>
+                                    <source src="/offline/{{ archivo }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button 
+                                        onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                        class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                        title="Vista previa"
+                                    >
+                                        <i class="fas fa-eye text-lg"></i>
+                                    </button>
+                                </div>
+                                {% elif archivo.endswith('.jpg') or archivo.endswith('.jpeg') or archivo.endswith('.png') or archivo.endswith('.gif') %}
+                                <img src="/offline/{{ archivo }}" alt="{{ archivo }}" class="w-full h-40 object-cover">
+                                <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <button 
+                                        onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                        class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                        title="Vista previa"
+                                    >
+                                        <i class="fas fa-eye text-lg"></i>
+                                    </button>
+                                </div>
+                                {% elif archivo.endswith('.mp3') or archivo.endswith('.wav') or archivo.endswith('.ogg') %}
+                                <div class="h-40 w-full flex flex-col items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-music text-4xl text-gray-500 dark:text-gray-400 mb-2"></i>
+                                    <audio controls class="w-4/5">
+                                        <source src="/offline/{{ archivo }}" type="audio/mpeg">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% elif archivo.endswith('.pdf') %}
+                                <div class="h-40 w-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-file-pdf text-5xl text-red-500"></i>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% elif archivo.endswith('.txt') or archivo.endswith('.csv') or archivo.endswith('.json') or archivo.endswith('.html') or archivo.endswith('.css') or archivo.endswith('.js') %}
+                                <div class="h-40 w-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-file-alt text-5xl text-gray-500 dark:text-gray-400"></i>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="h-40 w-full flex items-center justify-center bg-gray-200 dark:bg-gray-600 relative">
+                                    <i class="fas fa-file text-5xl text-gray-500 dark:text-gray-400"></i>
+                                    <div class="absolute inset-0 bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <button 
+                                            onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')" 
+                                            class="bg-white dark:bg-gray-800 text-[#5D5CDE] hover:text-[#4a49c0] p-2 rounded-full transition-all transform hover:scale-110"
+                                            title="Vista previa"
+                                        >
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ archivo }}</h3>
+                                <div class="mt-3 flex justify-between">
+                                    <button
+                                        onclick="previewFile('/offline/{{ archivo }}', '{{ archivo }}')"
+                                        class="text-[#5D5CDE] hover:text-[#4a49c0] text-sm flex items-center"
+                                    >
+                                        <i class="fas fa-eye mr-1"></i> Ver
+                                    </button>
+                                    <a href="/offline/{{ archivo }}" target="_blank" class="text-[#5D5CDE] hover:text-[#4a49c0] text-sm flex items-center">
+                                        <i class="fas fa-external-link-alt mr-1"></i> Abrir
+                                    </a>
+                                    <button onclick="rightClickSaveAs('/offline/{{ archivo }}')" class="download-btn text-[#5D5CDE] hover:text-[#4a49c0] text-sm flex items-center">
+                                        <i class="fas fa-download mr-1"></i> Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if not archivos_descargados %}
+                    <div id="no-files-message" class="py-12 text-center">
+                        <div class="mx-auto h-20 w-20 text-gray-400 dark:text-gray-500">
+                            <i class="fas fa-file text-5xl"></i>
+                        </div>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No hay archivos</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Descargue videos de YouTube o suba archivos para verlos aquí.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-gray-800 shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                <p>© 2025. Desarrollado por 🚀Brayan-chan🚀.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            
+            <!-- Modal panel -->
+            <div class="relative inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 w-full sm:max-w-5xl">
+                <!-- Modal header -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 id="previewModalTitle" class="text-lg font-medium text-gray-900 dark:text-white truncate">
+                        Vista previa del archivo
+                    </h3>
+                    <button id="closePreviewModal" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none">
+                        <span class="sr-only">Cerrar</span>
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Modal content -->
+                <div class="px-6 py-4">
+                    <!-- Loading indicator -->
+                    <div id="previewLoading" class="flex items-center justify-center py-10">
+                        <i class="fas fa-circle-notch fa-spin text-4xl text-[#5D5CDE]"></i>
+                        <span class="ml-3 text-gray-700 dark:text-gray-300">Cargando vista previa...</span>
+                    </div>
+
+                    <!-- Container for different preview types -->
+                    <div id="previewContainer" class="hidden">
+                        <!-- Image preview -->
+                        <div id="imagePreview" class="hidden">
+                            <img id="previewImage" src="" alt="Vista previa de imagen" class="max-w-full mx-auto max-h-[70vh] object-contain">
+                        </div>
+                        
+                        <!-- PDF preview -->
+                        <div id="pdfPreview" class="hidden">
+                            <div class="flex mb-3 items-center justify-between bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                                <div>
+                                    <button id="prevPage" class="px-3 py-1 bg-[#5D5CDE] text-white rounded hover:bg-[#4a49c0] mr-2 disabled:opacity-50">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button id="nextPage" class="px-3 py-1 bg-[#5D5CDE] text-white rounded hover:bg-[#4a49c0] disabled:opacity-50">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                    <span id="pdfPageInfo" class="ml-4 text-sm text-gray-700 dark:text-gray-300">
+                                        Página <span id="pdfCurrentPage">0</span> de <span id="pdfTotalPages">0</span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <button id="zoomOut" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500 mr-2">
+                                        <i class="fas fa-search-minus"></i>
+                                    </button>
+                                    <button id="zoomIn" class="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <canvas id="pdfCanvas" class="max-w-full mx-auto border border-gray-300 dark:border-gray-600"></canvas>
+                        </div>
+                        
+                        <!-- Video preview -->
+                        <div id="videoPreview" class="hidden">
+                            <video id="previewVideo" controls class="max-w-full mx-auto max-h-[70vh]">
+                                <source src="" type="video/mp4">
+                                Tu navegador no soporta la reproducción de videos.
+                            </video>
+                        </div>
+                        
+                        <!-- Audio preview -->
+                        <div id="audioPreview" class="hidden py-10 flex flex-col items-center justify-center">
+                            <i class="fas fa-music text-5xl text-gray-400 dark:text-gray-500 mb-4"></i>
+                            <audio id="previewAudio" controls class="w-full max-w-lg">
+                                <source src="" type="audio/mpeg">
+                                Tu navegador no soporta la reproducción de audio.
+                            </audio>
+                        </div>
+                        
+                        <!-- Text preview -->
+                        <div id="textPreview" class="hidden">
+                            <pre id="previewText" class="bg-gray-100 dark:bg-gray-700 p-4 rounded overflow-x-auto max-h-[70vh] text-sm text-gray-800 dark:text-gray-200"></pre>
+                        </div>
+                        
+                        <!-- Unsupported file type -->
+                        <div id="unsupportedPreview" class="hidden text-center py-10">
+                            <i class="fas fa-file-alt text-5xl text-gray-400 dark:text-gray-500 mb-3"></i>
+                            <p class="text-gray-700 dark:text-gray-300">Vista previa no disponible para este tipo de archivo.</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Descarga el archivo para visualizarlo.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal footer -->
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex flex-col sm:flex-row sm:justify-end gap-3">
+                    <a id="previewDownloadLink" href="#" target="_blank" class="inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#5D5CDE] hover:bg-[#4a49c0] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200">
+                        <i class="fas fa-external-link-alt mr-2"></i> Abrir en nueva pestaña
+                    </a>
+                    <button id="previewDownloadBtn" class="inline-flex justify-center items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                        <i class="fas fa-download mr-2"></i> Descargar
+                    </button>
+                    <button id="closePreviewModalBtn" class="mt-3 sm:mt-0 inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5D5CDE] transition-colors duration-200">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-6 py-3 rounded-md shadow-lg flex items-center transform translate-y-full opacity-0 transition-all duration-300 pointer-events-none z-40">
+        <i id="toast-icon" class="fas fa-check-circle mr-2"></i>
+        <span id="toast-message">Operación completada exitosamente</span>
+    </div>
+
+    <script>
+        // Theme Toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const htmlElement = document.documentElement;
+        
+        // Check system preference for initial theme
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            htmlElement.classList.add('dark');
+        }
+        
+        // Make sure the initial state of the theme icons matches the actual theme
+        updateThemeIcons();
+        
+        // Toggle theme when button is clicked
+        themeToggle.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            updateThemeIcons();
+            // Mostrar notificación para confirmar el cambio
+            const isDarkMode = htmlElement.classList.contains('dark');
+            showToast(isDarkMode ? 'Modo oscuro activado' : 'Modo claro activado', 'info');
+        });
+        
+        // Update the icons to match the current theme
+        function updateThemeIcons() {
+            const isDarkMode = htmlElement.classList.contains('dark');
+            const moonIcon = themeToggle.querySelector('.fa-moon');
+            const sunIcon = themeToggle.querySelector('.fa-sun');
+            
+            if (isDarkMode) {
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+            } else {
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+            }
+        }
+
+        // URL Validation
+        const urlInput = document.getElementById('url');
+        const validationMessage = document.getElementById('url-validation-message');
+        const downloadForm = document.getElementById('downloadForm');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const progressStatus = document.getElementById('progress-status').querySelector('span');
+
+        urlInput.addEventListener('input', () => {
+            // Hide validation message as user types
+            validationMessage.classList.add('hidden');
+        });
+
+        // Download Form Submission - Handle with AJAX
+        downloadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Validate YouTube URL
+            const url = urlInput.value.trim();
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+            
+            if (!youtubeRegex.test(url)) {
+                validationMessage.classList.remove('hidden');
+                showToast('Por favor, ingrese una URL válida de YouTube.', 'error');
+                return;
+            }
+            
+            // Show progress container
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            progressStatus.textContent = 'Iniciando descarga...';
+            
+            // Create FormData and send AJAX request
+            const formData = new FormData(downloadForm);
+            
+            fetch('/descargar', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Set progress to complete
+                progressBar.style.width = '100%';
+                progressPercentage.textContent = '100%';
+                progressStatus.textContent = '¡Descarga completada!';
+                
+                // Show success message
+                showToast(data.resultado || 'Video descargado con éxito', 'success');
+                
+                // Reload page after 2 seconds to show the new file
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            })
+            .catch(error => {
+                progressContainer.classList.add('hidden');
+                showToast('Error al descargar el video: ' + error, 'error');
+            });
+            
+            // Simulate progress while waiting for response
+            simulateProgress();
+        });
+
+        // File Upload Handling
+        const fileUpload = document.getElementById('archivo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const dropZone = document.getElementById('dropZone');
+        
+        // Regular file input change handler
+        fileUpload.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const fileName = e.target.files[0].name;
+                uploadBtn.classList.remove('hidden');
+                showToast(`Archivo "${fileName}" seleccionado. Haga clic en "Subir Archivo" para continuar.`, 'info');
+            } else {
+                uploadBtn.classList.add('hidden');
+            }
+        });
+        
+        // Drag and drop functionality
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        // Highlight drop zone when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        // Unhighlight drop zone when item is dragged out or dropped
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        // Handle dropped files
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        function highlight() {
+            dropZone.classList.add('border-[#5D5CDE]', 'bg-indigo-50', 'dark:bg-indigo-900/10');
+        }
+        
+        function unhighlight() {
+            dropZone.classList.remove('border-[#5D5CDE]', 'bg-indigo-50', 'dark:bg-indigo-900/10');
+        }
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                // Update the file input with the dropped file
+                fileUpload.files = files;
+                
+                // Show the upload button
+                const fileName = files[0].name;
+                uploadBtn.classList.remove('hidden');
+                showToast(`Archivo "${fileName}" listo para subir. Haga clic en "Subir Archivo" para continuar.`, 'info');
+            }
+        }
+        
+        // Upload Form Submission
+        const uploadForm = document.getElementById('uploadForm');
+        
+        uploadForm.addEventListener('submit', (e) => {
+            // Do not prevent default - let the form submit normally
+            // Show progress
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            progressStatus.textContent = 'Subiendo archivo...';
+            
+            // Simulate progress
+            simulateProgress();
+        });
+
+        // Progress Simulation
+        function simulateProgress() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress >= 90) {
+                    // Stop at 90% - the final 10% will happen when the server responds
+                    clearInterval(interval);
+                    return;
+                }
+                
+                progress += Math.floor(Math.random() * 5) + 1;
+                progress = Math.min(progress, 90);
+                
+                progressBar.style.width = `${progress}%`;
+                progressPercentage.textContent = `${progress}%`;
+                
+                if (progress < 30) {
+                    progressStatus.textContent = 'Iniciando proceso...';
+                } else if (progress < 60) {
+                    progressStatus.textContent = 'Descargando contenido...';
+                } else {
+                    progressStatus.textContent = 'Procesando archivo...';
+                }
+            }, 300);
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            
+            // Set message
+            toastMessage.textContent = message;
+            
+            // Set icon and color based on type
+            switch (type) {
+                case 'error':
+                    toast.classList.remove('bg-green-500', 'bg-blue-500');
+                    toast.classList.add('bg-red-500');
+                    toastIcon.classList.remove('fa-check-circle', 'fa-info-circle');
+                    toastIcon.classList.add('fa-times-circle');
+                    break;
+                case 'info':
+                    toast.classList.remove('bg-green-500', 'bg-red-500');
+                    toast.classList.add('bg-blue-500');
+                    toastIcon.classList.remove('fa-check-circle', 'fa-times-circle');
+                    toastIcon.classList.add('fa-info-circle');
+                    break;
+                default:
+                    toast.classList.remove('bg-red-500', 'bg-blue-500');
+                    toast.classList.add('bg-green-500');
+                    toastIcon.classList.remove('fa-times-circle', 'fa-info-circle');
+                    toastIcon.classList.add('fa-check-circle');
+            }
+            
+            // Show toast
+            toast.classList.remove('translate-y-full', 'opacity-0', 'pointer-events-none');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-full', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Helper function to guide users to save files
+        function rightClickSaveAs(fileUrl) {
+            showToast('Para guardar: Haga clic derecho en el archivo y seleccione "Guardar como..."', 'info');
+        }
+
+        // ==============================================
+        // File Preview Functionality
+        // ==============================================
+        
+        // Modal elements
+        const previewModal = document.getElementById('previewModal');
+        const closePreviewModal = document.getElementById('closePreviewModal');
+        const closePreviewModalBtn = document.getElementById('closePreviewModalBtn');
+        const previewModalTitle = document.getElementById('previewModalTitle');
+        const previewLoading = document.getElementById('previewLoading');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewDownloadLink = document.getElementById('previewDownloadLink');
+        const previewDownloadBtn = document.getElementById('previewDownloadBtn');
+        
+        // Preview type containers
+        const imagePreview = document.getElementById('imagePreview');
+        const pdfPreview = document.getElementById('pdfPreview');
+        const videoPreview = document.getElementById('videoPreview');
+        const audioPreview = document.getElementById('audioPreview');
+        const textPreview = document.getElementById('textPreview');
+        const unsupportedPreview = document.getElementById('unsupportedPreview');
+        
+        // Preview elements
+        const previewImage = document.getElementById('previewImage');
+        const previewVideo = document.getElementById('previewVideo');
+        const previewAudio = document.getElementById('previewAudio');
+        const previewText = document.getElementById('previewText');
+        
+        // PDF elements
+        const pdfCanvas = document.getElementById('pdfCanvas');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pdfCurrentPage = document.getElementById('pdfCurrentPage');
+        const pdfTotalPages = document.getElementById('pdfTotalPages');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        
+        // PDF variables
+        let pdfDoc = null;
+        let pdfPageNum = 1;
+        let pdfPageRendering = false;
+        let pdfPageNumPending = null;
+        let pdfScale = 1.0;
+        
+        // Open the preview modal
+        function previewFile(fileUrl, fileName) {
+            // Reset modal state
+            resetPreviewModal();
+            
+            // Update modal title
+            previewModalTitle.textContent = fileName || 'Vista previa del archivo';
+            
+            // Show loading indicator
+            previewLoading.classList.remove('hidden');
+            
+            // Set download links
+            previewDownloadLink.href = fileUrl;
+            previewDownloadBtn.onclick = () => rightClickSaveAs(fileUrl);
+            
+            // Show modal
+            previewModal.classList.remove('hidden');
+            
+            // Determine file type and load appropriate preview
+            const fileExtension = fileName.split('.').pop().toLowerCase();
+            
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(fileExtension)) {
+                loadImagePreview(fileUrl);
+            } else if (fileExtension === 'pdf') {
+                loadPdfPreview(fileUrl);
+            } else if (['mp4', 'webm', 'ogg', 'mov'].includes(fileExtension)) {
+                loadVideoPreview(fileUrl);
+            } else if (['mp3', 'wav', 'ogg', 'aac', 'm4a'].includes(fileExtension)) {
+                loadAudioPreview(fileUrl);
+            } else if (['txt', 'csv', 'json', 'html', 'css', 'js', 'xml', 'md', 'py', 'java', 'c', 'cpp', 'php'].includes(fileExtension)) {
+                loadTextPreview(fileUrl, fileExtension);
+            } else {
+                // Unsupported file type
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            }
+        }
+        
+        // Reset modal to initial state
+        function resetPreviewModal() {
+            // Hide all preview containers
+            imagePreview.classList.add('hidden');
+            pdfPreview.classList.add('hidden');
+            videoPreview.classList.add('hidden');
+            audioPreview.classList.add('hidden');
+            textPreview.classList.add('hidden');
+            unsupportedPreview.classList.add('hidden');
+            
+            // Hide main container
+            previewContainer.classList.add('hidden');
+            
+            // Reset PDF viewer
+            if (pdfDoc) {
+                pdfDoc = null;
+            }
+            
+            // Reset audio/video
+            previewVideo.pause();
+            previewVideo.src = '';
+            previewAudio.pause();
+            previewAudio.src = '';
+            
+            // Reset image
+            previewImage.src = '';
+            
+            // Reset text
+            previewText.textContent = '';
+        }
+        
+        // Hide loading indicator and show preview container
+        function hideLoading() {
+            previewLoading.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+        }
+        
+        // Load image preview
+        function loadImagePreview(fileUrl) {
+            previewImage.onload = () => {
+                hideLoading();
+                imagePreview.classList.remove('hidden');
+            };
+            
+            previewImage.onerror = () => {
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            };
+            
+            previewImage.src = fileUrl;
+        }
+        
+        // Load video preview
+        function loadVideoPreview(fileUrl) {
+            const videoSource = previewVideo.querySelector('source');
+            videoSource.src = fileUrl;
+            
+            previewVideo.load();
+            
+            previewVideo.oncanplay = () => {
+                hideLoading();
+                videoPreview.classList.remove('hidden');
+            };
+            
+            previewVideo.onerror = () => {
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            };
+        }
+        
+        // Load audio preview
+        function loadAudioPreview(fileUrl) {
+            const audioSource = previewAudio.querySelector('source');
+            audioSource.src = fileUrl;
+            
+            previewAudio.load();
+            
+            previewAudio.oncanplay = () => {
+                hideLoading();
+                audioPreview.classList.remove('hidden');
+            };
+            
+            previewAudio.onerror = () => {
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            };
+        }
+        
+        // Load text file preview
+        function loadTextPreview(fileUrl, fileExtension) {
+            fetch(fileUrl)
+                .then(response => response.text())
+                .then(text => {
+                    previewText.textContent = text;
+                    
+                    // Apply syntax highlighting if applicable
+                    if (['html', 'css', 'js', 'xml', 'json', 'py', 'java', 'c', 'cpp', 'php'].includes(fileExtension) && typeof hljs !== 'undefined') {
+                        previewText.classList.add(`language-${fileExtension}`);
+                        hljs.highlightElement(previewText);
+                    }
+                    
+                    hideLoading();
+                    textPreview.classList.remove('hidden');
+                })
+                .catch(() => {
+                    hideLoading();
+                    unsupportedPreview.classList.remove('hidden');
+                });
+        }
+        
+        // Load PDF preview using PDF.js
+        function loadPdfPreview(fileUrl) {
+            pdfjsLib.getDocument(fileUrl).promise.then(function(pdf) {
+                pdfDoc = pdf;
+                pdfTotalPages.textContent = pdf.numPages;
+                
+                // Initial page rendering
+                pdfPageNum = 1;
+                renderPdfPage(pdfPageNum);
+                
+                // Update buttons state
+                updatePdfButtons();
+                
+                // Show PDF container
+                hideLoading();
+                pdfPreview.classList.remove('hidden');
+            }).catch(function(error) {
+                console.error('Error loading PDF:', error);
+                hideLoading();
+                unsupportedPreview.classList.remove('hidden');
+            });
+        }
+        
+        // Render PDF page
+        function renderPdfPage(num) {
+            pdfPageRendering = true;
+            
+            // Update current page counter
+            pdfCurrentPage.textContent = num;
+            
+            // Get page
+            pdfDoc.getPage(num).then(function(page) {
+                // Set scale (zoom level)
+                const viewport = page.getViewport({ scale: pdfScale });
+                pdfCanvas.height = viewport.height;
+                pdfCanvas.width = viewport.width;
+                
+                // Render PDF page
+                const renderContext = {
+                    canvasContext: pdfCanvas.getContext('2d'),
+                    viewport: viewport
+                };
+                
+                const renderTask = page.render(renderContext);
+                
+                // Wait for rendering to finish
+                renderTask.promise.then(function() {
+                    pdfPageRendering = false;
+                    
+                    // Check if there's a pending page
+                    if (pdfPageNumPending !== null) {
+                        renderPdfPage(pdfPageNumPending);
+                        pdfPageNumPending = null;
+                    }
+                });
+            });
+        }
+        
+        // Go to previous page
+        function previousPdfPage() {
+            if (pdfPageNum <= 1) {
+                return;
+            }
+            pdfPageNum--;
+            queuePdfRender(pdfPageNum);
+            updatePdfButtons();
+        }
+        
+        // Go to next page
+        function nextPdfPage() {
+            if (pdfPageNum >= pdfDoc.numPages) {
+                return;
+            }
+            pdfPageNum++;
+            queuePdfRender(pdfPageNum);
+            updatePdfButtons();
+        }
+        
+        // Queue rendering of the page
+        function queuePdfRender(num) {
+            if (pdfPageRendering) {
+                pdfPageNumPending = num;
+            } else {
+                renderPdfPage(num);
+            }
+        }
+        
+        // Update PDF buttons state
+        function updatePdfButtons() {
+            prevPageBtn.disabled = pdfPageNum <= 1;
+            nextPageBtn.disabled = pdfPageNum >= pdfDoc.numPages;
+        }
+        
+        // Zoom in
+        function zoomIn() {
+            pdfScale += 0.25;
+            queuePdfRender(pdfPageNum);
+        }
+        
+        // Zoom out
+        function zoomOut() {
+            if (pdfScale <= 0.5) return;
+            pdfScale -= 0.25;
+            queuePdfRender(pdfPageNum);
+        }
+        
+        // PDF navigation event listeners
+        prevPageBtn.addEventListener('click', previousPdfPage);
+        nextPageBtn.addEventListener('click', nextPdfPage);
+        zoomInBtn.addEventListener('click', zoomIn);
+        zoomOutBtn.addEventListener('click', zoomOut);
+        
+        // Close modal on button clicks
+        closePreviewModal.addEventListener('click', () => {
+            previewModal.classList.add('hidden');
+        });
+        
+        closePreviewModalBtn.addEventListener('click', () => {
+            previewModal.classList.add('hidden');
+        });
+        
+        // Close modal on background click
+        previewModal.addEventListener('click', (e) => {
+            if (e.target === previewModal) {
+                previewModal.classList.add('hidden');
+            }
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !previewModal.classList.contains('hidden')) {
+                previewModal.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
